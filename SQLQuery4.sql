@@ -70,5 +70,34 @@ FROM forders
 GROUP BY product_name
 ORDER BY total_revenue DESC;
 
---Analysing spend
+-
+--Simulating %increase of sales volume by 22%
 
+(SELECT sales_volume * 1.22 AS increased_sales_volume,year
+FROM (
+    SELECT SUM(quantity) AS sales_volume,datepart(year,order_date) as year
+    FROM Forders
+	group by datepart(year,order_date) 
+) as Increased_sales_volume
+
+
+-- Calculating potential increase in sales revenue
+	with cte as 
+	(SELECT sales_volume,sales_volume * 1.22 AS increased_sales_volume,year
+    FROM (
+    SELECT SUM(quantity) AS sales_volume ,datepart(year,order_date) as year
+    FROM Forders
+	group by datepart(year,order_date) 
+) as Increased_sales_volume )
+
+,Bte as 
+(
+    SELECT SUM(sales) / SUM(quantity) AS average_price,sum(sales) as sales_revenue,datepart(year,order_date)as year
+    FROM Forders 
+	group by datepart(year,order_date)
+)
+
+select  sales_volume,increased_sales_volume,sales_revenue,increased_sales_volume * average_price as potential_increase_in_sales_revenue,cte.year,lead(potential_increase_in_sales_revenue) over (order by year) as yoy 
+from cte 
+inner join bte on cte.year=bte.year
+where cte.year in (2020,2021)
