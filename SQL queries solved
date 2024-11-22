@@ -1,0 +1,12 @@
+with cte as (
+select d.department_name,e.name,sum(e.salary) as total_salary,dense_rank() over(partition by d.department_name order by sum(e.salary)desc) as rn
+from employee e 
+left join department d on e.department_id=d.department_id
+group by d.department_name,e.name
+
+ )
+
+select department_name,name,total_salary
+from cte 
+where rn<=3
+order by department_name asc,total_salary desc, name asc
